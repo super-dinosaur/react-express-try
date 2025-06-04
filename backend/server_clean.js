@@ -1,0 +1,64 @@
+const express = require("express");
+const { exec } = require("child_process");
+const path = require("path");
+const cors = require("cors");
+
+const app = express();
+
+// Enable CORS for React app
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  }),
+);
+
+app.use(express.json());
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ message: "Backend server is running!" });
+});
+
+// API endpoint to execute shell script
+app.post("/api/execute-script", (req, res) => {
+  const scriptPath = path.join(__dirname, "scripts", "inference.py");
+
+  console.log("User clicked button - executing shell script...");
+
+  const { VideoPath, ModulePath, OutputDir } = req.body;
+  const command = `python ${scriptPath} \
+    --VideoPath "${VideoPath}" \
+    --ModulePath "${ModulePath}"\
+    --OutputDir "${OutputDir}"`;
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing script: ${error}`);
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    if (stderr) {
+      console.error(`Script stderr: ${stderr}`);
+    }
+
+    console.log(`Script output: ${stdout}`);
+
+    res.json({
+      success: true,
+      output: stdout,
+      message: "Shell script executed successfully!",
+      timestamp: new Date().toISOString(),
+    });
+  });
+});
+
+const PORT = 5002;
+app.listen(PORT, () => {
+  console.log(`🚀 Express server running on http://localhost:${PORT}`);
+  console.log(
+    `📁 Script location: ${path.join(__dirname, "scripts", "demo-script.sh")}`,
+  );
+});
+module.exports = app;

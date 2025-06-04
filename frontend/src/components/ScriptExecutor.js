@@ -33,6 +33,11 @@ function ScriptExecutor() {
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          VideoPath: "~/Downloads/demo.mp4",
+          ModulePath: "~/Downloads/demo.pth",
+          OutputDir: "~/Downloads/",
+        }),
       });
 
       const data = await response.json();
